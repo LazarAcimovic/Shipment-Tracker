@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import { errorHandler } from "./middleware/errorHandler";
 import { notFound } from "./middleware/notFound";
+import customerRoutes from "./routes/customer.routes";
 
 const app = express();
 
@@ -12,6 +13,8 @@ app.use(express.json());
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
+
+app.use("/api/customers", customerRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
