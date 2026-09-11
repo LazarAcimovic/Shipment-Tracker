@@ -4,6 +4,7 @@ import express from "express";
 import { errorHandler } from "./middleware/errorHandler";
 import { notFound } from "./middleware/notFound";
 import customerRoutes from "./routes/customer.routes";
+import shipmentRoutes from "./routes/shipment.routes";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/customers", customerRoutes);
+app.use("/api/shipments", shipmentRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
