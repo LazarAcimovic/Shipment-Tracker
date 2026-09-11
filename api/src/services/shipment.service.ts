@@ -1,9 +1,15 @@
-import { ALLOWED_TRANSITIONS } from "../domain/stateMachine";
-import { ListShipmentsQuery } from "../dtos/shipment.dto";
+import { ALLOWED_TRANSITIONS, canTransition } from "../domain/stateMachine";
+import { CreateShipmentDto, ListShipmentsQuery, RecordEventDto } from "../dtos/shipment.dto";
 import { HttpError } from "../middleware/httpError";
-import { findManyShipments, findShipmentById } from "../repositories/shipment.repository";
+import {
+  createShipment as repoCreateShipment,
+  findManyShipments,
+  findShipmentById,
+  recordShipmentEvent,
+} from "../repositories/shipment.repository";
 import { toShipmentDetailResponse, toShipmentResponse } from "../utils/shipmentMapper";
 import { parsePagination } from "../utils/pagination";
+import { findAllCustomers } from "../repositories/customer.repository";
 
 export async function listShipments(query: ListShipmentsQuery) {
   const lateOnly = query.late === "true";
@@ -41,4 +47,34 @@ export async function getShipment(id: string) {
 
   const allowedNextStatuses = ALLOWED_TRANSITIONS[shipment.currentStatus];
   return toShipmentDetailResponse(shipment, allowedNextStatuses);
+}
+
+export async function createShipment(dto: CreateShipmentDto) {
+  const customers = await findAllCustomers();
+  const customerExists = customers.some((c) => c.id === dto.customerId);
+  if (!customerExists) throw new HttpError(404, "Customer not found");
+
+  const shipment = await repoCreateShipment({
+    customerId: dto.customerId,
+    origin: dto.origin,
+    destination: dto.destination,
+    promisedDeliveryDate: new Date(dto.promisedDeliveryDate),
+  });
+
+  return getShipment(shipment.id);
+}
+
+export async function recordEvent(id: string, dto: RecordEventDto) {
+  const shipment = await findShipmentById(id);
+  if (!shipment) throw new HttpError(404, "Shipment not found");
+
+  if (!canTransition(shipment.currentStatus, dto.status)) {
+    throw new HttpError(
+      422,
+      `Cannot move from ${shipment.currentStatus} to ${dto.status}`,
+    );
+  }
+
+  await recordShipmentEvent(id, dto.status, dto.location, dto.note);
+  return getShipment(id);
 }
