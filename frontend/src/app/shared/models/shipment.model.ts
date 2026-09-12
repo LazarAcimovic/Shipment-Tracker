@@ -30,10 +30,10 @@ export interface Shipment {
   updatedAt: string;
   isLate: boolean;
   lateByMs: number;
+  customer: Customer;
 }
 
 export interface ShipmentDetail extends Shipment {
-  customer: Customer;
   events: ShipmentEvent[];
   allowedNextStatuses: ShipmentStatus[];
 }

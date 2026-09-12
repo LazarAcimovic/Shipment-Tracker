@@ -1,0 +1,18 @@
+.app-header {
+  background-color: var(--color-nav-bg);
+  padding: 0 1.5rem;
+}
+
+.app-header__nav {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  height: 3.5rem;
+}
+
+.app-header__link {
+  color: var(--color-nav-text);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+}

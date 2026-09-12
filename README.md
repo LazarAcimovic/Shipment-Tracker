@@ -7,7 +7,7 @@ A logistics operations dashboard that answers two questions every morning: where
 ## Prerequisites
 
 - **Node.js v24.11.0** (pin this version; other versions are untested)
-- **PostgreSQL 15** — via Docker (recommended) or a local install
+- **PostgreSQL 15** - via Docker (recommended) or a local install
 
 ---
 
@@ -39,7 +39,7 @@ npx prisma db seed
 npm run dev
 ```
 
-Confirm the API is up before starting the frontend — open `http://localhost:3000/api/health` in your browser. You should see `{ "status": "ok" }`. If you see an error here, fix it before proceeding; a frontend failure at this point is almost always a backend or database problem.
+Confirm the API is up before starting the frontend - open `http://localhost:3000/api/health` in your browser. You should see `{ "status": "ok" }`. If you see an error here, fix it before proceeding; a frontend failure at this point is almost always a backend or database problem.
 
 ---
 
@@ -71,21 +71,21 @@ _To be filled in when packages are installed._
 
 ### Assumptions made where the brief was silent
 
-- **No separate Order entity.** The brief describes a path from "customer order" to delivery. I folded the order concept directly into `Shipment` — a shipment is created when an order is confirmed, and `CONFIRMED` is its first status. This avoids a join that adds no information the operations person cares about.
+- **No separate Order entity.** The brief describes a path from "customer order" to delivery. I folded the order concept directly into `Shipment` - a shipment is created when an order is confirmed, and `CONFIRMED` is its first status. This avoids a join that adds no information the operations person cares about.
 - **`PREPARED` merges two brief steps.** The brief mentions "goods prepared" and "picked from the warehouse" separately. I merged them into one `PREPARED` status because they always happen together in this workflow and splitting them would add a status with no operational meaning.
 - **Single operator, no auth.** The brief says one user opens the app in the morning. No login, no sessions, no roles.
 - **`origin` is required.** The brief doesn't say this explicitly, but a shipment with no origin has no useful timeline. Required at creation.
-- **`promisedDeliveryDate` is a date without time.** The brief says "promised delivery date" — operations people think in days, not hours. Stored as a full `DateTime` (PostgreSQL `timestamptz`) at midnight UTC so comparisons work correctly, displayed as date-only in the UI.
+- **`promisedDeliveryDate` is a date without time.** The brief says "promised delivery date" - operations people think in days, not hours. Stored as a full `DateTime` (PostgreSQL `timestamptz`) at midnight UTC so comparisons work correctly, displayed as date-only in the UI.
 
 ### Deliberately left out, and why
 
-- **Order entity** — folds cleanly into Shipment for this scope; would add a layer with no user-visible benefit.
-- **Customer CRUD** — the brief explicitly pre-loads customers. Building a create/edit/delete screen would consume time better spent on the operations dashboard.
-- **Authentication and authorization** — explicitly out of scope per the brief.
-- **Email / notifications** — out of scope; the operations person uses the dashboard directly.
-- **NgRx (global state)** — screens navigate between each other and the server is the source of truth. Each screen refetches on entry. A global store pays off only when multiple live, distant components share the same mutable state — that does not exist here. Plain injectable services with signals are sufficient.
-- **Editing or deleting past events** — the event log is append-only by design. History is immutable; correcting a mistake means recording a new event.
-- **Real-time updates** — out of scope; a page refresh or re-navigation picks up the latest state.
+- **Order entity** - folds cleanly into Shipment for this scope; would add a layer with no user-visible benefit.
+- **Customer CRUD** - the brief explicitly pre-loads customers. Building a create/edit/delete screen would consume time better spent on the operations dashboard.
+- **Authentication and authorization** - explicitly out of scope per the brief.
+- **Email / notifications** - out of scope; the operations person uses the dashboard directly.
+- **NgRx (global state)** - screens navigate between each other and the server is the source of truth. Each screen refetches on entry. A global store pays off only when multiple live, distant components share the same mutable state - that does not exist here. Plain injectable services with signals are sufficient.
+- **Editing or deleting past events** - the event log is append-only by design. History is immutable; correcting a mistake means recording a new event.
+- **Real-time updates** - out of scope; a page refresh or re-navigation picks up the latest state.
 
 ### Where it would break first at scale
 
