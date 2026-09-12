@@ -19,8 +19,8 @@ import {
   ShipmentListResponse,
   ShipmentStatus,
 } from '../../shared/models/shipment.model';
-import { STATUS_LABELS, STATUS_OPTIONS } from './constants/shipment-list.constants';
-import { formatLateBy } from './utils/lateness.utils';
+import { STATUS_LABELS, STATUS_OPTIONS } from '../../shared/constants/shipment-status.constants';
+import { formatLateBy } from '../../shared/utils/lateness.utils';
 
 @Component({
   selector: 'app-shipment-list',

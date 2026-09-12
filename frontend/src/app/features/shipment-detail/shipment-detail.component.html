@@ -1,3 +1,93 @@
-<main>
-  <h1>Shipment Detail</h1>
+<main class="shipment-detail">
+  <a routerLink="/" class="shipment-detail__back">← Back to shipments</a>
+
+  @if (isLoading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (pageError()) {
+    <p class="shipment-detail__page-error">{{ pageError() }}</p>
+  }
+
+  @if (detail(); as d) {
+    <header class="shipment-detail__header">
+      <div class="shipment-detail__title">
+        <h1 class="shipment-detail__route">{{ d.origin }} → {{ d.destination }}</h1>
+        <p class="shipment-detail__customer">{{ d.customer.name }}</p>
+      </div>
+
+      <dl class="shipment-detail__meta">
+        <dt>Status</dt>
+        <dd>{{ statusLabel(d.currentStatus) }}</dd>
+
+        <dt>Promised by</dt>
+        <dd>{{ d.promisedDeliveryDate | date:'dd MMM yyyy' }}</dd>
+
+        @if (d.deliveredAt) {
+          <dt>Delivered</dt>
+          <dd>{{ d.deliveredAt | date:'dd MMM yyyy' }}</dd>
+        }
+
+        @if (d.isLate) {
+          <dt>Lateness</dt>
+          <dd class="shipment-detail__late">
+            <mat-icon>warning</mat-icon>
+            {{ formatLateBy(d.lateByMs) }}
+          </dd>
+        }
+      </dl>
+    </header>
+
+    <section class="shipment-detail__timeline" aria-label="Event timeline">
+      <h2 class="shipment-detail__section-title">Timeline</h2>
+      <ol class="shipment-detail__events">
+        @for (e of d.events; track e.id) {
+          <li class="shipment-detail__event">
+            <span class="shipment-detail__event-status">{{ statusLabel(e.status) }}</span>
+            <span class="shipment-detail__event-time">{{ e.occurredAt | date:'dd MMM yyyy, HH:mm' }}</span>
+            @if (e.location) {
+              <span class="shipment-detail__event-location">{{ e.location }}</span>
+            }
+            @if (e.note) {
+              <p class="shipment-detail__event-note">{{ e.note }}</p>
+            }
+          </li>
+        }
+      </ol>
+    </section>
+
+    @if (d.allowedNextStatuses.length > 0) {
+      <section class="shipment-detail__record" aria-label="Record event">
+        <h2 class="shipment-detail__section-title">Record event</h2>
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="shipment-detail__form">
+          <mat-form-field appearance="outline">
+            <mat-label>Next status</mat-label>
+            <mat-select formControlName="status">
+              @for (s of d.allowedNextStatuses; track s) {
+                <mat-option [value]="s">{{ statusLabel(s) }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Location (optional)</mat-label>
+            <input matInput formControlName="location" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Note (optional)</mat-label>
+            <textarea matInput formControlName="note" rows="3"></textarea>
+          </mat-form-field>
+
+          @if (submitError()) {
+            <p class="shipment-detail__submit-error">{{ submitError() }}</p>
+          }
+
+          <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || isSubmitting()">
+            {{ isSubmitting() ? 'Saving…' : 'Record event' }}
+          </button>
+        </form>
+      </section>
+    }
+  }
 </main>

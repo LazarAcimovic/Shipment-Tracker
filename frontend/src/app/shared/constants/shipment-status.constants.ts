@@ -1,4 +1,4 @@
-import { ShipmentStatus } from '../../../shared/models/shipment.model';
+import { ShipmentStatus } from '../models/shipment.model';
 
 export const STATUS_LABELS: Record<ShipmentStatus, string> = {
   CONFIRMED: 'Confirmed',
