@@ -1,3 +1,62 @@
-<main>
-  <h1>New Shipment</h1>
+<main class="shipment-create">
+  <a routerLink="/" class="shipment-create__back">← Back to shipments</a>
+
+  <header class="shipment-create__header">
+    <h1>New shipment</h1>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="shipment-create__form">
+
+    <mat-form-field appearance="outline">
+      <mat-label>Customer</mat-label>
+      <mat-select formControlName="customerId">
+        @for (c of customers(); track c.id) {
+          <mat-option [value]="c.id">{{ c.name }}</mat-option>
+        }
+      </mat-select>
+      @if (fieldErrors()['customerId']) {
+        <mat-error>{{ fieldErrors()['customerId'] }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Origin</mat-label>
+      <input matInput formControlName="origin" placeholder="e.g. Warsaw" />
+      @if (fieldErrors()['origin']) {
+        <mat-error>{{ fieldErrors()['origin'] }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Destination</mat-label>
+      <input matInput formControlName="destination" placeholder="e.g. Berlin" />
+      @if (fieldErrors()['destination']) {
+        <mat-error>{{ fieldErrors()['destination'] }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Promised delivery date</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="promisedDeliveryDate" [min]="today" />
+      <mat-datepicker-toggle matIconSuffix [for]="picker" />
+      <mat-datepicker #picker />
+      @if (fieldErrors()['promisedDeliveryDate']) {
+        <mat-error>{{ fieldErrors()['promisedDeliveryDate'] }}</mat-error>
+      }
+    </mat-form-field>
+
+    @if (submitError()) {
+      <p class="shipment-create__submit-error">{{ submitError() }}</p>
+    }
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      [disabled]="!isValid() || isSubmitting()"
+    >
+      {{ isSubmitting() ? 'Creating…' : 'Create shipment' }}
+    </button>
+
+  </form>
 </main>
