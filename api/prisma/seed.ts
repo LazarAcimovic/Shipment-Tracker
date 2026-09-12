@@ -25,9 +25,16 @@ function addDays(date: Date, days: number): Date {
   return addHours(date, days * 24);
 }
 
-const NOW = new Date("2026-09-10T08:00:00.000Z");
+const NOW = new Date();
+
+async function truncate() {
+  await prisma.shipmentEvent.deleteMany();
+  await prisma.shipment.deleteMany();
+  await prisma.customer.deleteMany();
+}
 
 async function main() {
+  await truncate();
   await prisma.$transaction(async (tx) => {
     const customers = await Promise.all([
       tx.customer.create({
@@ -94,7 +101,7 @@ async function main() {
         origin: "Hamburg",
         destination: "Frankfurt",
         targetStatus: "CONFIRMED",
-        promisedDeliveryDate: addDays(NOW, 5),
+        promisedDeliveryDate: addDays(NOW, 9),
         createdAt: addDays(NOW, -1),
       },
       {
@@ -102,7 +109,7 @@ async function main() {
         origin: "Gothenburg",
         destination: "Stockholm",
         targetStatus: "PREPARED",
-        promisedDeliveryDate: addDays(NOW, 4),
+        promisedDeliveryDate: addDays(NOW, 8),
         createdAt: addDays(NOW, -2),
       },
       {
@@ -110,7 +117,7 @@ async function main() {
         origin: "Barcelona",
         destination: "Madrid",
         targetStatus: "PICKED_UP",
-        promisedDeliveryDate: addDays(NOW, 3),
+        promisedDeliveryDate: addDays(NOW, 7),
         createdAt: addDays(NOW, -3),
       },
       {
@@ -118,7 +125,7 @@ async function main() {
         origin: "Salzburg",
         destination: "Vienna",
         targetStatus: "DEPARTED",
-        promisedDeliveryDate: addDays(NOW, 2),
+        promisedDeliveryDate: addDays(NOW, 6),
         createdAt: addDays(NOW, -4),
       },
       {
@@ -126,7 +133,7 @@ async function main() {
         origin: "Amsterdam",
         destination: "Rotterdam",
         targetStatus: "AT_HUB",
-        promisedDeliveryDate: addDays(NOW, 2),
+        promisedDeliveryDate: addDays(NOW, 6),
         createdAt: addDays(NOW, -4),
       },
       {
@@ -134,7 +141,7 @@ async function main() {
         origin: "Munich",
         destination: "Berlin",
         targetStatus: "OUT_FOR_DELIVERY",
-        promisedDeliveryDate: addDays(NOW, 1),
+        promisedDeliveryDate: addDays(NOW, 5),
         createdAt: addDays(NOW, -5),
       },
       {
@@ -142,7 +149,7 @@ async function main() {
         origin: "Oslo",
         destination: "Copenhagen",
         targetStatus: "DELIVERED",
-        promisedDeliveryDate: addDays(NOW, -1),
+        promisedDeliveryDate: addDays(NOW, 3),
         createdAt: addDays(NOW, -8),
       },
       {
@@ -150,16 +157,16 @@ async function main() {
         origin: "Lisbon",
         destination: "Porto",
         targetStatus: "DELIVERED",
-        promisedDeliveryDate: addDays(NOW, -3),
+        promisedDeliveryDate: addDays(NOW, 1),
         createdAt: addDays(NOW, -10),
       },
-      // Late in-transit — promised date passed, not yet delivered
+      // Late in-transit - promised date passed, not yet delivered
       {
         customerId: alpine.id,
         origin: "Graz",
         destination: "Innsbruck",
         targetStatus: "OUT_FOR_DELIVERY",
-        promisedDeliveryDate: addDays(NOW, -2),
+        promisedDeliveryDate: addDays(NOW, 2),
         createdAt: addDays(NOW, -7),
       },
       {
@@ -167,7 +174,7 @@ async function main() {
         origin: "Brussels",
         destination: "Antwerp",
         targetStatus: "AT_HUB",
-        promisedDeliveryDate: addDays(NOW, -1),
+        promisedDeliveryDate: addDays(NOW, 3),
         createdAt: addDays(NOW, -6),
       },
       {
@@ -175,7 +182,7 @@ async function main() {
         origin: "Dortmund",
         destination: "Cologne",
         targetStatus: "DEPARTED",
-        promisedDeliveryDate: addDays(NOW, -3),
+        promisedDeliveryDate: addDays(NOW, 1),
         createdAt: addDays(NOW, -9),
       },
       {
@@ -183,7 +190,7 @@ async function main() {
         origin: "Helsinki",
         destination: "Tampere",
         targetStatus: "PICKED_UP",
-        promisedDeliveryDate: addDays(NOW, -4),
+        promisedDeliveryDate: addDays(NOW, 0),
         createdAt: addDays(NOW, -8),
       },
       {
@@ -191,7 +198,7 @@ async function main() {
         origin: "Seville",
         destination: "Valencia",
         targetStatus: "AT_HUB",
-        promisedDeliveryDate: addDays(NOW, -5),
+        promisedDeliveryDate: addDays(NOW, -1),
         createdAt: addDays(NOW, -10),
       },
       // Delivered late
@@ -200,7 +207,7 @@ async function main() {
         origin: "Linz",
         destination: "Graz",
         targetStatus: "DELIVERED",
-        promisedDeliveryDate: addDays(NOW, -6),
+        promisedDeliveryDate: addDays(NOW, -2),
         createdAt: addDays(NOW, -12),
       },
       {
@@ -208,7 +215,7 @@ async function main() {
         origin: "The Hague",
         destination: "Utrecht",
         targetStatus: "DELIVERED",
-        promisedDeliveryDate: addDays(NOW, -4),
+        promisedDeliveryDate: addDays(NOW, 0),
         createdAt: addDays(NOW, -11),
       },
       // Delivered on time
@@ -217,8 +224,8 @@ async function main() {
         origin: "Berlin",
         destination: "Hamburg",
         targetStatus: "DELIVERED",
-        promisedDeliveryDate: addDays(NOW, 3), 
-        createdAt: addDays(NOW, -5), 
+        promisedDeliveryDate: addDays(NOW, 7),
+        createdAt: addDays(NOW, -5),
       },
       // More on-time variety
       {
@@ -226,7 +233,7 @@ async function main() {
         origin: "Stuttgart",
         destination: "Nuremberg",
         targetStatus: "CONFIRMED",
-        promisedDeliveryDate: addDays(NOW, 7),
+        promisedDeliveryDate: addDays(NOW, 11),
         createdAt: addDays(NOW, -1),
       },
       {
@@ -234,7 +241,7 @@ async function main() {
         origin: "Malmo",
         destination: "Gothenburg",
         targetStatus: "PREPARED",
-        promisedDeliveryDate: addDays(NOW, 6),
+        promisedDeliveryDate: addDays(NOW, 10),
         createdAt: addDays(NOW, -2),
       },
       {
@@ -242,7 +249,7 @@ async function main() {
         origin: "Eindhoven",
         destination: "Amsterdam",
         targetStatus: "OUT_FOR_DELIVERY",
-        promisedDeliveryDate: addDays(NOW, 1),
+        promisedDeliveryDate: addDays(NOW, 5),
         createdAt: addDays(NOW, -6),
       },
     ];
