@@ -77,9 +77,11 @@
 
     <tr mat-header-row *matHeaderRowDef="columns"></tr>
     <tr mat-row *matRowDef="let row; columns: columns;" (click)="onRowClick(row)" [class.shipment-list__row--late]="row.isLate"></tr>
-    <tr *matNoDataRow>  
-      <td [attr.colspan]="columns.length" class="shipment-list__empty">No shipments found.</td>
-    </tr>
+    <tr *matNoDataRow>
+      <td [attr.colspan]="columns.length" class="shipment-list__empty">
+        @if (!isLoading()) { No shipments found. }
+      </td>
+    </tr> 
 
   </table>  
 
