@@ -1,5 +1,9 @@
 import { ALLOWED_TRANSITIONS, canTransition } from "../domain/stateMachine";
-import { CreateShipmentDto, ListShipmentsQuery, RecordEventDto } from "../dtos/shipment.dto";
+import {
+  CreateShipmentDto,
+  ListShipmentsQuery,
+  RecordEventDto,
+} from "../dtos/shipment.dto";
 import { HttpError } from "../middleware/httpError";
 import {
   createShipment as repoCreateShipment,
@@ -7,16 +11,19 @@ import {
   findShipmentById,
   recordShipmentEvent,
 } from "../repositories/shipment.repository";
-import { toShipmentDetailResponse, toShipmentResponse } from "../utils/shipmentMapper";
+import {
+  toShipmentDetailResponse,
+  toShipmentResponse,
+} from "../utils/shipmentMapper";
 import { parsePagination } from "../utils/pagination";
 import { findAllCustomers } from "../repositories/customer.repository";
 
 export async function listShipments(query: ListShipmentsQuery) {
   const lateOnly = query.late === "true";
-  const { skip, take, page, pageSize } = parsePagination(query.page, query.pageSize);
-  //1, 10
- //skip 0, take 10, page 1, pageSize 10
- 
+  const { skip, take, page, pageSize } = parsePagination(
+    query.page,
+    query.pageSize,
+  );
 
   const { data, total } = await findManyShipments(
     {
@@ -27,7 +34,6 @@ export async function listShipments(query: ListShipmentsQuery) {
     },
     skip,
     take,
-    lateOnly,
   );
 
   const mapped = data.map(toShipmentResponse);

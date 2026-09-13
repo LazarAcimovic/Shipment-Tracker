@@ -2,17 +2,16 @@ import { Prisma, ShipmentStatus } from "@prisma/client";
 import { prisma } from "../config/prisma";
 
 type FindManyFilters = {
-  status?: ShipmentStatus; //at hub
-  customerId?: string; //neki-id
-  lateOnly?: boolean;//true
+  status?: ShipmentStatus; 
+  customerId?: string; 
+  lateOnly?: boolean;
   search?: string;
 };
 
 export async function findManyShipments(
   filters: FindManyFilters,
-  skip: number, //0
-  take: number, //10
-  sortByLate: boolean, //true
+  skip: number,
+  take: number,
 ) {
   const now = new Date();
 
@@ -51,9 +50,7 @@ export async function findManyShipments(
     ];
   }
 
-  const orderBy: Prisma.ShipmentOrderByWithRelationInput = sortByLate
-    ? { promisedDeliveryDate: "asc" }
-    : { createdAt: "desc" };
+  const orderBy: Prisma.ShipmentOrderByWithRelationInput = { promisedDeliveryDate: "asc" };
 
   const [data, total] = await prisma.$transaction([
     prisma.shipment.findMany({ where, skip, take, orderBy, include: { customer: true } }),

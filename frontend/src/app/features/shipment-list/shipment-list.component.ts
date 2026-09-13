@@ -81,11 +81,6 @@ export class ShipmentListComponent implements OnInit {
     };
     this.shipmentService.getAll(query).subscribe({
       next: (res) => {
-        res.data.sort((a, b) => {
-          if (a.isLate && !b.isLate) return -1;
-          if (!a.isLate && b.isLate) return 1;
-          return b.lateByMs - a.lateByMs;
-        });
         this.response.set(res);
         this.isLoading.set(false);
       },
