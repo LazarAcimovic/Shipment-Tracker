@@ -214,6 +214,12 @@ See "Where it would break first at scale" below.
 - **No separate Order entity.** The brief describes a path from "customer order" to delivery. We folded the order concept directly into `Shipment`. A shipment is created when an order is confirmed, and `CONFIRMED` is its first status.
 - **`origin` is required.** A shipment with no origin has no useful timeline. Required at creation.
 
+### Added beyond the spec, and why
+
+The spec says "if you come up with something that helps this person more, build it and explain why." One small addition:
+
+- **Clear all filters button** - a single click resets status, customer, late-only, and search back to their defaults. Not in the spec, but the operations person uses filters heavily in the morning to focus into what matters. Without it, they'd have to undo each filter individually. One click to reset is a genuine time-saver and costs almost nothing to build.
+
 ### Deliberately left out, and why
 
 - **Order entity** - folds cleanly into Shipment for this scope. Creating an order entity would add a layer with no user-visible benefit.
