@@ -219,6 +219,7 @@ See "Where it would break first at scale" below.
 The spec says "if you come up with something that helps this person more, build it and explain why." One small addition:
 
 - **Clear all filters button** - a single click resets status, customer, late-only, and search back to their defaults. Not in the spec, but the operations person uses filters heavily in the morning to focus into what matters. Without it, they'd have to undo each filter individually. One click to reset is a genuine time-saver and costs almost nothing to build.
+- **Unit tests** (Vitest) - not required by the spec, but the state machine and lateness logic are pure functions with clear inputs and outputs, so they are cheap to test and the tests act as living documentation of the business rules. 
 
 ### Deliberately left out, and why
 
