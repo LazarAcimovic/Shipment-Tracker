@@ -34,20 +34,15 @@ export async function findManyShipments(
   }
 
   if (filters.lateOnly) {
-    where.AND = [
-      {
-        OR: [
-          {
-            currentStatus: { not: "DELIVERED" },
-            promisedDeliveryDate: { lt: now },
-          },
-          {
-            currentStatus: "DELIVERED",
-            deliveredAt: { not: null },
-          },
-        ],
-      },
-    ];
+    const lateIds = await prisma.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "Shipment"
+      WHERE (
+        ("currentStatus" != 'DELIVERED' AND "promisedDeliveryDate" < ${now})
+        OR
+        ("currentStatus" = 'DELIVERED' AND "deliveredAt" > "promisedDeliveryDate")
+      )
+    `;
+    where.id = { in: lateIds.map((r) => r.id) };
   }
 
   const orderBy: Prisma.ShipmentOrderByWithRelationInput = { promisedDeliveryDate: "asc" };
