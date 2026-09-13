@@ -305,7 +305,7 @@ async function main() {
         });
       }
     }
-  });
+  }, { timeout: 60000 });
 
   console.log("Seed complete: 5 customers, 18 shipments across all statuses.");
 }
