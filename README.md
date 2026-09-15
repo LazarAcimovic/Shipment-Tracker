@@ -19,6 +19,19 @@ If the hosted app is unavailable for any reason, the app runs locally in a few m
 
 ---
 
+## Local demo
+
+> ⚠️ **Disclaimer:** Render's free PostgreSQL database has a limited lifetime. If enough time has passed since deployment, the hosted version's data may be gone and the app will appear empty or unavailable. The videos below show the full application running locally with the seed data loaded, so you can see the intended experience regardless of the hosted database state.
+
+**Part one**
+
+
+
+**Part two**
+
+
+---
+
 ## Running it locally
 
 ### Prerequisites
