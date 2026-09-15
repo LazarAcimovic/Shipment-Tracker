@@ -25,12 +25,16 @@ If the hosted app is unavailable for any reason, the app runs locally in a few m
 
 **Part one**
 
+https://github.com/user-attachments/assets/7ef13efd-1f96-4da7-8431-951f0c387ba3
+
+
+
 
 
 **Part two**
 
+https://github.com/user-attachments/assets/2f4fa423-7a19-48fd-83bb-c9871b709f85
 
----
 
 ## Running it locally
 
