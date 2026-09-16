@@ -16,7 +16,7 @@ import {
   toShipmentResponse,
 } from "../utils/shipmentMapper";
 import { parsePagination } from "../utils/pagination";
-import { findAllCustomers } from "../repositories/customer.repository";
+import { findCustomerById } from "../repositories/customer.repository";
 
 export async function listShipments(query: ListShipmentsQuery) {
   const lateOnly = query.late === "true";
@@ -56,9 +56,8 @@ export async function getShipment(id: string) {
 }
 
 export async function createShipment(dto: CreateShipmentDto) {
-  const customers = await findAllCustomers();
-  const customerExists = customers.some((c) => c.id === dto.customerId);
-  if (!customerExists) throw new HttpError(404, "Customer not found");
+  const customer = await findCustomerById(dto.customerId);
+  if (!customer) throw new HttpError(404, "Customer not found");
 
   const shipment = await repoCreateShipment({
     customerId: dto.customerId,
