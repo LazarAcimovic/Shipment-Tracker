@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
-import { toHumanMessage } from "../utils/zodHelpers";
 import { HttpError } from "./httpError";
 
 export function errorHandler(
@@ -14,8 +13,7 @@ export function errorHandler(
     return;
   }
   if (err instanceof ZodError) {
-    const messages = err.errors.map(toHumanMessage);
-    res.status(422).json({ error: messages });
+    res.status(422).json({ error: err.issues.map((i) => i.message) });
     return;
   }
   console.error(err);

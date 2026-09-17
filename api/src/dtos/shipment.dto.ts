@@ -6,12 +6,17 @@ const shipmentStatusValues = Object.values(ShipmentStatus) as [
   ...ShipmentStatus[],
 ];
 
-export const createShipmentSchema = z.object({
-  customerId: z.string().uuid(),
-  origin: z.string().min(1),
-  destination: z.string().min(1),
-  promisedDeliveryDate: z.string().datetime(),
-});
+export const createShipmentSchema = z
+  .object({
+    customerId: z.string().uuid("Customer is required"),
+    origin: z.string().min(1, "Origin is required"),
+    destination: z.string().min(1, "Destination is required"),
+    promisedDeliveryDate: z.string().datetime("Promised delivery date must be a valid date"),
+  })
+  .refine(
+    (d) => d.origin.trim().toLowerCase() !== d.destination.trim().toLowerCase(),
+    { message: "Origin and destination must be different", path: ["destination"] },
+  );
 
 export const recordEventSchema = z.object({
   status: z.enum(shipmentStatusValues),
