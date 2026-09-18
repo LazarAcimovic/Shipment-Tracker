@@ -34,7 +34,9 @@
       Late only
     </mat-slide-toggle>
 
-    <button mat-stroked-button (click)="clearFilters()">Clear all</button>
+    @if (hasActiveFilters()) {
+      <button mat-stroked-button (click)="clearFilters()">Clear all</button>
+    }
   </section>
 
   @if (isLoading()) {

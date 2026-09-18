@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
@@ -59,6 +59,10 @@ export class ShipmentListComponent implements OnInit {
   readonly statusFilter = signal('');
   readonly customerFilter = signal('');
   readonly lateFilter = signal(false);
+
+  readonly hasActiveFilters = computed(() =>
+    !!this.searchFilter() || !!this.statusFilter() || !!this.customerFilter() || this.lateFilter()
+  );
   readonly page = signal(1);
   readonly pageSize = signal(20);
 
