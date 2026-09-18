@@ -10,6 +10,7 @@ import {
   findManyShipments,
   findShipmentById,
   recordShipmentEvent,
+  updateShipment as repoUpdateShipment,
 } from "../repositories/shipment.repository";
 import {
   toShipmentDetailResponse,
@@ -67,6 +68,23 @@ export async function createShipment(dto: CreateShipmentDto) {
   });
 
   return getShipment(shipment.id);
+}
+
+export async function updateShipment(id: string, dto: CreateShipmentDto) {
+  const shipment = await findShipmentById(id);
+  if (!shipment) throw new HttpError(404, "Shipment not found");
+
+  const customer = await findCustomerById(dto.customerId);
+  if (!customer) throw new HttpError(404, "Customer not found");
+
+  await repoUpdateShipment(id, {
+    customerId: dto.customerId,
+    origin: dto.origin,
+    destination: dto.destination,
+    promisedDeliveryDate: new Date(dto.promisedDeliveryDate),
+  });
+
+  return getShipment(id);
 }
 
 export async function recordEvent(id: string, dto: RecordEventDto) {

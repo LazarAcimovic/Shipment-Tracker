@@ -92,6 +92,21 @@ export async function recordShipmentEvent(
   });
 }
 
+export async function updateShipment(
+  id: string,
+  data: { customerId: string; origin: string; destination: string; promisedDeliveryDate: Date },
+) {
+  return prisma.shipment.update({
+    where: { id },
+    data: {
+      customerId: data.customerId,
+      origin: data.origin,
+      destination: data.destination,
+      promisedDeliveryDate: data.promisedDeliveryDate,
+    },
+  });
+}
+
 export async function findShipmentById(id: string) {
   return prisma.shipment.findUnique({
     where: { id },

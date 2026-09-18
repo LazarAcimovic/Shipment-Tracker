@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { createShipmentSchema, listShipmentsQuerySchema, recordEventSchema } from "../dtos/shipment.dto";
-import { createShipment, getShipment, listShipments, recordEvent } from "../services/shipment.service";
+import { createShipment, getShipment, listShipments, recordEvent, updateShipment } from "../services/shipment.service";
 
 export async function getShipments(req: Request, res: Response, next: NextFunction) {
   try {
@@ -26,6 +26,16 @@ export async function postShipment(req: Request, res: Response, next: NextFuncti
     const body = createShipmentSchema.parse(req.body);
     const shipment = await createShipment(body);
     res.status(201).json(shipment);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function putShipment(req: Request, res: Response, next: NextFunction) {
+  try {
+    const body = createShipmentSchema.parse(req.body);
+    const shipment = await updateShipment(req.params.id, body);
+    res.json(shipment);
   } catch (err) {
     next(err);
   }
