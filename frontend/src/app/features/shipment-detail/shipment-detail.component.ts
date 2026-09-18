@@ -1,6 +1,8 @@
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {
   ReactiveFormsModule,
   FormGroup,
@@ -35,18 +37,22 @@ import { formatLateBy } from '../../shared/utils/lateness.utils';
     MatSelectModule,
     MatButtonModule,
     MatIconModule,
+    MatDialogModule,
   ],
   templateUrl: './shipment-detail.component.html',
   styleUrl: './shipment-detail.component.css',
 })
 export class ShipmentDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly shipmentService = inject(ShipmentService);
+  private readonly dialog = inject(MatDialog);
 
   readonly isLoading = signal(false);
   readonly pageError = signal<string | null>(null);
   readonly detail = signal<ShipmentDetail | null>(null);
   readonly isSubmitting = signal(false);
+  readonly isDeleting = signal(false);
   readonly submitError = signal<string | null>(null);
 
   readonly form = new FormGroup({
@@ -79,6 +85,27 @@ export class ShipmentDetailComponent implements OnInit {
 
   statusLabel(status: ShipmentStatus): string {
     return STATUS_LABELS[status];
+  }
+
+  onDelete() {
+    const d = this.detail();
+    if (!d) return;
+
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Delete shipment', message: 'Delete this shipment? This cannot be undone.' },
+    });
+
+    ref.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+      this.isDeleting.set(true);
+      this.shipmentService.delete(d.id).subscribe({
+        next: () => this.router.navigate(['/']),
+        error: () => {
+          this.pageError.set('Failed to delete shipment.');
+          this.isDeleting.set(false);
+        },
+      });
+    });
   }
 
   onSubmit() {

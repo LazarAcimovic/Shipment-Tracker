@@ -38,6 +38,10 @@ export class ShipmentService {
     return this.http.put<ShipmentDetail>(`${this.base}/${id}`, body);
   }
 
+  delete(id: string) {
+    return this.http.delete(`${this.base}/${id}`);
+  }
+
   recordEvent(id: string, body: RecordShipmentEvent) {
     return this.http.post<ShipmentDetail>(`${this.base}/${id}/events`, body);
   }

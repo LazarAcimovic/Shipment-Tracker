@@ -1,5 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import { DatePipe } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
@@ -37,6 +39,7 @@ import { formatLateBy } from '../../shared/utils/lateness.utils';
     MatButtonModule,
     MatProgressBarModule,
     MatIconModule,
+    MatDialogModule,
   ],
   templateUrl: './shipment-list.component.html',
   styleUrl: './shipment-list.component.css',
@@ -45,10 +48,11 @@ export class ShipmentListComponent implements OnInit {
   private readonly shipmentService = inject(ShipmentService);
   private readonly customerService = inject(CustomerService);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
 
   private searchTimeout: number | null = null;
 
-  readonly columns = ['route', 'customer', 'status', 'promisedDate', 'late', 'edit'];
+  readonly columns = ['route', 'customer', 'status', 'promisedDate', 'late', 'edit', 'delete'];
   readonly statusOptions = STATUS_OPTIONS;
 
   readonly searchFilter = signal('');
@@ -134,6 +138,20 @@ export class ShipmentListComponent implements OnInit {
 
   onRowClick(row: Shipment) {
     this.router.navigate(['/shipments', row.id]);
+  }
+
+  onDelete(row: Shipment) {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Delete shipment', message: 'Delete this shipment? This cannot be undone.' },
+    });
+
+    ref.afterClosed().subscribe((confirmed: boolean) => {
+      if (!confirmed) return;
+      this.shipmentService.delete(row.id).subscribe({
+        next: () => this.load(),
+        error: () => {},
+      });
+    });
   }
 
   clearFilters() {
