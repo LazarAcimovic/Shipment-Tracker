@@ -16,6 +16,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'shipments/:id/edit',
+    loadComponent: () =>
+      import('./features/shipment-create/shipment-create.component').then(
+        (m) => m.ShipmentCreateComponent,
+      ),
+  },
+  {
     path: 'shipments/:id',
     loadComponent: () =>
       import('./features/shipment-detail/shipment-detail.component').then(

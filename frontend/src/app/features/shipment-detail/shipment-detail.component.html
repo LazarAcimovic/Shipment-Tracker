@@ -11,9 +11,14 @@
 
   @if (detail(); as d) {
     <header class="shipment-detail__header">
-      <div class="shipment-detail__title">
-        <h1 class="shipment-detail__route">{{ d.origin }} → {{ d.destination }}</h1>
-        <p class="shipment-detail__customer">{{ d.customer.name }}</p>
+      <div class="shipment-detail__header-top">
+        <div class="shipment-detail__title">
+          <h1 class="shipment-detail__route">{{ d.origin }} → {{ d.destination }}</h1>
+          <p class="shipment-detail__customer">{{ d.customer.name }}</p>
+        </div>
+        @if (d.currentStatus !== 'DELIVERED') {
+          <a mat-stroked-button [routerLink]="['/shipments', d.id, 'edit']">Edit</a>
+        }
       </div>
 
       <dl class="shipment-detail__meta">

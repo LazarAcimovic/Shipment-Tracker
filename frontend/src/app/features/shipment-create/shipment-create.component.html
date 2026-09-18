@@ -2,8 +2,12 @@
   <a routerLink="/" class="shipment-create__back">← Back to shipments</a>
 
   <header class="shipment-create__header">
-    <h1>New shipment</h1>
+    <h1>{{ isEditMode ? 'Edit shipment' : 'New shipment' }}</h1>
   </header>
+
+  @if (pageError()) {
+    <p class="shipment-create__submit-error">{{ pageError() }}</p>
+  }
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="shipment-create__form">
 
@@ -55,7 +59,7 @@
       type="submit"
       [disabled]="!isValid() || isSubmitting()"
     >
-      {{ isSubmitting() ? 'Creating…' : 'Create shipment' }}
+      {{ isSubmitting() ? 'Saving…' : (isEditMode ? 'Save changes' : 'Create shipment') }}
     </button>
 
   </form>

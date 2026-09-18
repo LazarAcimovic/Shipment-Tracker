@@ -34,6 +34,10 @@ export class ShipmentService {
     return this.http.post<ShipmentDetail>(this.base, body);
   }
 
+  update(id: string, body: CreateShipment) {
+    return this.http.put<ShipmentDetail>(`${this.base}/${id}`, body);
+  }
+
   recordEvent(id: string, body: RecordShipmentEvent) {
     return this.http.post<ShipmentDetail>(`${this.base}/${id}/events`, body);
   }

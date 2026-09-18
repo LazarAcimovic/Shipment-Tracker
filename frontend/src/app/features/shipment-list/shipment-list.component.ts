@@ -48,7 +48,7 @@ export class ShipmentListComponent implements OnInit {
 
   private searchTimeout: number | null = null;
 
-  readonly columns = ['route', 'customer', 'status', 'promisedDate', 'late'];
+  readonly columns = ['route', 'customer', 'status', 'promisedDate', 'late', 'edit'];
   readonly statusOptions = STATUS_OPTIONS;
 
   readonly searchFilter = signal('');
