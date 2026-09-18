@@ -7,6 +7,7 @@ import {
 import { HttpError } from "../middleware/httpError";
 import {
   createShipment as repoCreateShipment,
+  deleteShipment as repoDeleteShipment,
   findManyShipments,
   findShipmentById,
   recordShipmentEvent,
@@ -85,6 +86,12 @@ export async function updateShipment(id: string, dto: CreateShipmentDto) {
   });
 
   return getShipment(id);
+}
+
+export async function deleteShipment(id: string) {
+  const shipment = await findShipmentById(id);
+  if (!shipment) throw new HttpError(404, "Shipment not found");
+  await repoDeleteShipment(id);
 }
 
 export async function recordEvent(id: string, dto: RecordEventDto) {

@@ -107,6 +107,10 @@ export async function updateShipment(
   });
 }
 
+export async function deleteShipment(id: string) {
+  return prisma.shipment.delete({ where: { id } });
+}
+
 export async function findShipmentById(id: string) {
   return prisma.shipment.findUnique({
     where: { id },

@@ -48,7 +48,7 @@ model Shipment {
 model ShipmentEvent {
   id         String         @id @default(uuid())
   shipmentId String
-  shipment   Shipment       @relation(fields: [shipmentId], references: [id])
+  shipment   Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
   status     ShipmentStatus
   occurredAt DateTime       @default(now())
   location   String?
