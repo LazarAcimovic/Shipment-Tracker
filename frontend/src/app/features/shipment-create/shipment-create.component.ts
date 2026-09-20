@@ -3,10 +3,11 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
+import { catchError, debounceTime, filter, of, switchMap, tap } from 'rxjs';
 import { ShipmentService } from '../../shared/services/shipment.service';
 import { CustomerService } from '../../shared/services/customer.service';
 import { Customer } from '../../shared/models/customer.model';
@@ -20,7 +21,7 @@ import { createShipmentSchema } from './shipment-create.schema';
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
+    MatAutocompleteModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatButtonModule,
@@ -36,7 +37,8 @@ export class ShipmentCreateComponent implements OnInit {
 
   private editId: string | null = null;
 
-  readonly customers = signal<Customer[]>([]);
+  readonly customerSearchCtrl = new FormControl<string>('', { nonNullable: true, validators: [Validators.required] });
+  readonly customerResults = signal<Customer[]>([]);
   readonly isSubmitting = signal(false);
   readonly pageError = signal<string | null>(null);
   readonly submitError = signal<string | null>(null);
@@ -58,18 +60,33 @@ export class ShipmentCreateComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.customerService.getAll().subscribe({
-      next: (list) => this.customers.set(list),
+    this.customerSearchCtrl.valueChanges.pipe(
+      filter((value): value is string => typeof value === 'string'),
+      tap((value) => {
+        this.form.get('customerId')!.setValue('', { emitEvent: false });
+        if (value.trim().length === 0) this.customerResults.set([]);
+      }),
+      debounceTime(400),
+      switchMap(term =>
+        term.trim().length > 0
+          ? this.customerService.search(term).pipe(catchError(() => of([])))
+          : of([]),
+      ),
+    ).subscribe(results => {
+      this.customerResults.set(results);
+      this.validate();
     });
 
     this.form.get('origin')!.valueChanges.subscribe(() => { this.lastEditedRouteField = 'origin'; });
     this.form.get('destination')!.valueChanges.subscribe(() => { this.lastEditedRouteField = 'destination'; });
     this.form.valueChanges.subscribe(() => this.validate());
+    this.validate();
 
     this.editId = this.route.snapshot.paramMap.get('id');
     if (this.editId) {
       this.shipmentService.getById(this.editId).subscribe({
         next: (s) => {
+          this.customerSearchCtrl.setValue(s.customer.name, { emitEvent: false });
           this.form.patchValue({
             customerId: s.customerId,
             origin: s.origin,
@@ -82,10 +99,23 @@ export class ShipmentCreateComponent implements OnInit {
     }
   }
 
+  onCustomerInputFocus() {
+    if (this.customerSearchCtrl.value.trim().length === 0) {
+      this.customerResults.set([]);
+    }
+  }
+
+  onCustomerSelected(event: MatAutocompleteSelectedEvent) {
+    const customer = event.option.value as Customer;
+    this.form.get('customerId')!.setValue(customer.id, { emitEvent: false });
+    this.customerSearchCtrl.setValue(customer.name, { emitEvent: false });
+    this.validate();
+  }
+
   private validate(): boolean {
     const v = this.form.value;
     const result = createShipmentSchema.safeParse({
-      customerId: v.customerId,
+      customerId: v.customerId ?? '',
       origin: v.origin,
       destination: v.destination,
       promisedDeliveryDate: v.promisedDeliveryDate,
@@ -97,6 +127,17 @@ export class ShipmentCreateComponent implements OnInit {
       for (const issue of result.error.issues) {
         const field = issue.path[0] as string;
         if (!errors[field]) errors[field] = issue.message;
+      }
+    }
+
+    if (errors['customerId']) {
+      errors['customerId'] = this.customerSearchCtrl.value.trim().length > 0
+        ? 'Requested customer does not exist'
+        : 'Customer is required';
+      this.customerSearchCtrl.setErrors({ invalid: true });
+    } else {
+      if (this.customerSearchCtrl.errors?.['invalid']) {
+        this.customerSearchCtrl.updateValueAndValidity({ onlySelf: true, emitEvent: false });
       }
     }
 
@@ -127,6 +168,7 @@ export class ShipmentCreateComponent implements OnInit {
   }
 
   onSubmit() {
+    this.customerSearchCtrl.markAsTouched();
     if (!this.validate()) return;
     const v = this.form.value;
 

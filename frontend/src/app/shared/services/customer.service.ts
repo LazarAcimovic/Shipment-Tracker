@@ -11,4 +11,8 @@ export class CustomerService {
   getAll() {
     return this.http.get<Customer[]>(this.base);
   }
+
+  search(term: string, limit = 20) {
+    return this.http.get<Customer[]>(this.base, { params: { search: term, limit } });
+  }
 }
