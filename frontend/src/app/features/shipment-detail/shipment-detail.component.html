@@ -31,7 +31,7 @@
         <dd>{{ statusLabel(d.currentStatus) }}</dd>
 
         <dt>Promised by</dt>
-        <dd>{{ d.promisedDeliveryDate | date:'dd MMM yyyy' }}</dd>
+        <dd>{{ d.promisedDeliveryDate | date:'dd MMM yyyy, HH:mm' }}</dd>
 
         @if (d.deliveredAt) {
           <dt>Delivered</dt>

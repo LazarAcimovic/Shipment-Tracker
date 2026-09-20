@@ -50,6 +50,8 @@ export class ShipmentCreateComponent implements OnInit {
     origin: new FormControl<string>('', { nonNullable: true, validators: [Validators.required] }),
     destination: new FormControl<string>('', { nonNullable: true, validators: [Validators.required] }),
     promisedDeliveryDate: new FormControl<Date | null>(null, { validators: [Validators.required] }),
+    promisedDeliveryHour: new FormControl<string>('', { nonNullable: true }),
+    promisedDeliveryMinute: new FormControl<string>('', { nonNullable: true }),
   });
 
   readonly today = new Date();
@@ -87,11 +89,16 @@ export class ShipmentCreateComponent implements OnInit {
       this.shipmentService.getById(this.editId).subscribe({
         next: (s) => {
           this.customerSearchCtrl.setValue(s.customer.name, { emitEvent: false });
+          const d = new Date(s.promisedDeliveryDate);
+          const hh = d.getHours().toString().padStart(2, '0');
+          const mm = d.getMinutes().toString().padStart(2, '0');
           this.form.patchValue({
             customerId: s.customerId,
             origin: s.origin,
             destination: s.destination,
-            promisedDeliveryDate: new Date(s.promisedDeliveryDate),
+            promisedDeliveryDate: d,
+            promisedDeliveryHour: hh,
+            promisedDeliveryMinute: mm,
           });
         },
         error: () => this.pageError.set('Failed to load shipment.'),
@@ -112,13 +119,24 @@ export class ShipmentCreateComponent implements OnInit {
     this.validate();
   }
 
+  private combineDateAndTime(date: Date, hour: string, minute: string): Date {
+    const combined = new Date(date);
+    const h = Math.min(23, Math.max(0, parseInt(hour) || 0));
+    const m = Math.min(59, Math.max(0, parseInt(minute) || 0));
+    combined.setHours(h, m, 0, 0);
+    return combined;
+  }
+
   private validate(): boolean {
     const v = this.form.value;
+    const combinedDate = v.promisedDeliveryDate
+      ? this.combineDateAndTime(v.promisedDeliveryDate, v.promisedDeliveryHour ?? '', v.promisedDeliveryMinute ?? '')
+      : null;
     const result = createShipmentSchema.safeParse({
       customerId: v.customerId ?? '',
       origin: v.origin,
       destination: v.destination,
-      promisedDeliveryDate: v.promisedDeliveryDate,
+      promisedDeliveryDate: combinedDate,
     });
 
     const errors: Partial<Record<string, string>> = {};
@@ -175,11 +193,12 @@ export class ShipmentCreateComponent implements OnInit {
     this.isSubmitting.set(true);
     this.submitError.set(null);
 
+    const combined = this.combineDateAndTime(v.promisedDeliveryDate!, v.promisedDeliveryHour ?? '', v.promisedDeliveryMinute ?? '');
     const body = {
       customerId: v.customerId!,
       origin: v.origin!,
       destination: v.destination!,
-      promisedDeliveryDate: v.promisedDeliveryDate!.toISOString(),
+      promisedDeliveryDate: combined.toISOString(),
     };
 
     const request = this.editId
