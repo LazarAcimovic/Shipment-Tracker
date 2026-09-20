@@ -26,6 +26,8 @@ model Customer {
   country   String
   createdAt DateTime   @default(now())
   shipments Shipment[]
+
+  @@index([name])
 }
 
 model Shipment {
