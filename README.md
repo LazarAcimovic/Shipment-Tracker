@@ -131,6 +131,23 @@ Database → migration → seed → backend → frontend. Do not skip the health
 - **Debounced API calls** on the search input - the request fires only after the user stops typing for 400 ms, avoiding unnecessary network calls on every keystroke.
 - **Clean code**: simple TypeScript (no `any`), no code comments (names carry the meaning), DRY, and semantic HTML for screen readers.
 
+### API endpoints
+
+| Method   | Path                          | Description                                               |
+|----------|-------------------------------|-----------------------------------------------------------|
+| `GET`    | `/api/health`                 | Health check                                              |
+| `GET`    | `/api/customers`              | List all customers (populates create/edit form dropdown)  |
+| `GET`    | `/api/shipments`              | List shipments with filters, search, pagination           |
+| `POST`   | `/api/shipments`              | Create a shipment (starts in `CONFIRMED` with initial event) |
+| `GET`    | `/api/shipments/:id`          | Shipment detail with full event timeline and allowed next statuses |
+| `PUT`    | `/api/shipments/:id`          | Edit a shipment's four editable fields (`customerId`, `origin`, `destination`, `promisedDeliveryDate`). Never touches `currentStatus`, `deliveredAt`, or events. |
+| `DELETE` | `/api/shipments/:id`          | Delete a shipment and all its events (cascade). Returns `204 No Content`. |
+| `POST`   | `/api/shipments/:id/events`   | Record an event and advance the shipment's status         |
+
+### Origin ≠ destination rule
+
+A shipment cannot have the same origin and destination. The check is normalized — trimmed and lowercased — so `"Belgrade"`, `"belgrade"`, and `" Belgrade "` all count as equal. The rule lives in the Zod schema on both the backend (`createShipmentSchema` with `.refine(...)`) and the frontend. The backend always rejects with a `422`; the frontend additionally tracks which of the two fields was edited last and renders the error message under that field for clearer UX.
+
 ### Responsive layout
 
 Responsiveness is handled **automatically by Angular Material** - its table, form fields, toolbar, and layout components adapt to narrower screens on their own, so there was practically no need for custom media queries. The data table scrolls horizontally rather than overflowing the viewport on small screens.
@@ -200,6 +217,30 @@ Seeding the hosted database from a local machine (because of free plan's restric
 
 **The fix.** Raise the transaction timeout for the seed: `prisma.$transaction(fn, { timeout: 60000 })`. This is only needed because we're seeding a remote DB over the internet from a laptop - locally, or from inside Render's own network, the default would be fine.
 
+### 5. Picking a customer killed the entire type-ahead (the dead-stream bug)
+
+The customer picker was upgraded from "load every customer into a dropdown" to a debounced type-ahead (`mat-autocomplete`) that fetches only the customers matching what the operator types - so it scales to thousands of customers. It worked while typing, but the moment I **selected** a customer, three things broke at once: typing more never searched again, clearing the box left the stale list on screen, and retyping never reopened the dropdown.
+
+**The problem.** All three were the same root cause. The input is bound to a form control _and_ carries `[matAutocomplete]`, which makes Material's autocomplete the control's value-writer. When you type, it pushes a _string_ into the control; but when you **select an option**, it pushes the option's value - the whole `Customer` **object** - through `valueChanges`. My pipe assumed a string and called `value.trim()` on it, which threw `TypeError: value.trim is not a function`. An unhandled error **permanently tears down an RxJS subscription**, so from the first selection onward the search stream was dead and stopped reacting to anything - which is why one crash produced three separate-looking symptoms.
+
+**The fix.** Guard the stream so it can never choke: `filter((v): v is string => typeof v === 'string')` drops the object emitted on selection before it reaches `.trim()`, and `catchError(() => of([]))` inside the `switchMap` makes a failed request yield an empty list instead of killing the stream. With the crash gone, all three symptoms disappeared at once.
+
+### 6. Retyping the same name right after selecting did nothing
+
+Type a name, select the customer, clear the box, and immediately retype the same letters - no request fired and no dropdown appeared. Waiting a second first made it work, which was the clue.
+
+**The problem.** I had added `distinctUntilChanged()` after `debounceTime(400)`. It remembers the last term that was actually searched. When you clear and retype quickly, the empty value in between gets swallowed inside the debounce window, so the debounced value ends up equal to the last searched term - `distinctUntilChanged` sees "no change" and suppresses it. Pausing let the empty value flush through and reset its memory, which is exactly why waiting "fixed" it.
+
+**The fix.** Remove `distinctUntilChanged()`. The de-duplication it bought is negligible for a capped, debounced localhost query, and dropping it makes the search fire on whatever the final debounced text is, regardless of typing speed.
+
+### 7. Validation messages appeared only after typing - and never on the customer field
+
+Clicking into Origin/Destination/Date and clicking back out turned the field red (Material's touched-and-invalid state) but showed **no message text**. The messages only appeared once I typed something _anywhere_ on the form. The customer field never showed a message at all.
+
+**The problem - two layers.** The message text comes from a `fieldErrors` signal that is only filled inside `validate()`, and `validate()` only runs when a form _value_ changes - touching a field changes no value, so the text was never there. Separately, a field's red border/message is decided by the control the input is _bound to_. The visible customer input is bound to `customerSearchCtrl`, which had **no validators** and so always reported "valid"; the hidden `customerId` control _is_ required, but nothing displays it, so its invalid state was never visible. Faking it with `setErrors()` at startup didn't stick either - Angular's `[formControl]` directive re-runs `updateValueAndValidity()` after `ngOnInit`, and with no real validators it recomputes the control straight back to "valid".
+
+**The fix.** Two small changes. Call `validate()` once in `ngOnInit` so `fieldErrors` is populated up front (Material's touched-and-invalid gate then decides _when_ each message shows). And give `customerSearchCtrl` its own `Validators.required`, so its empty-state invalidity is genuine and survives the recompute - exactly like the other three fields already did.
+
 ---
 
 ## Decisions
@@ -237,6 +278,16 @@ The spec says "if you come up with something that helps this person more, build 
 
 - **Clear all filters button** - a single click resets status, customer, late-only, and search back to their defaults. Not in the spec, but the operations person uses filters heavily in the morning to focus into what matters. Without it, they'd have to undo each filter individually. One click to reset is a genuine time-saver and costs almost nothing to build.
 - **Unit tests** (Vitest) - not required by the spec, but the state machine and lateness logic are pure functions with clear inputs and outputs, so they are cheap to test and the tests act as living documentation of the business rules. 
+
+### Why shipment edit and delete are in scope while events stay append-only
+
+Editing and deleting a **shipment record** (the four editable fields: customer, origin, destination, promised date) is a data-correction operation — fixing a typo in the destination or reassigning a shipment to the correct customer. These fields describe what was intended at creation and have no bearing on what has actually happened during transport.
+
+Individual **events**, on the other hand, are facts about what physically occurred — a pickup, a hub arrival, a delivery. Editing or deleting a past event would rewrite history and break the audit trail. The two rules are therefore independent: a shipment's metadata can be corrected, but its event log cannot. Deleting a shipment as a whole (which removes all its events with it via cascade) is a different operation entirely — it removes the entire record, not selectively rewrites its history.
+
+### Why validation is kept simple and identical on both layers
+
+The original backend validation used a `toHumanMessage` helper that mapped Zod issue codes to readable strings through a `FIELD_LABELS` table. This added a translation layer that was easy to get out of sync with the actual rules. The simpler approach — putting the human-readable message directly in each Zod rule (the second argument of `.min()`, `.refine()`, etc.) and having the error handler return those messages verbatim — means the message lives exactly where the rule is defined, on both the backend and the frontend. There is one obvious place to look when a message needs to change, and the two schemas read identically.
 
 ### Deliberately left out, and why
 
